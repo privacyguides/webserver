@@ -7,14 +7,14 @@
 		trusted_ip_header X-Real-IP
 		cookie_consent umami
 		cookie_resolution resolution
-		debug
 	}
 }
 
-www.privacyguides.org {
+direct.privacyguides.org {
 	import vars
 	import common/*.caddy
 	import production/*.caddy
+	#	log
 }
 
 http://www.xoe4vn5uwdztif6goazfbmogh6wh5jc4up35bqdflu6bkdc5cas5vjqd.onion {

@@ -28,6 +28,8 @@ on:
       NETLIFY_TOKEN:
       PROD_MINIO_KEY_ID:
       PROD_MINIO_SECRET_KEY:
+      CF_API_TOKEN:
+      CF_ACCOUNT_ID:
 
 jobs:
   netlify:

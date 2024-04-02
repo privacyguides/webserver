@@ -1,4 +1,12 @@
-cache
+#cache {
+#	nuts {
+#		configuration {
+#			Dir /tmp/pg-nuts-configuration
+#			SegmentSize defaultSegmentSize
+#			NodeNum 1
+#		}
+#	}
+#}
 encode zstd gzip
 reverse_proxy http://10.163.3.10:9000 {
 	header_up Host privacyguides-org-production.stor1-minio.jonaharagon.net
