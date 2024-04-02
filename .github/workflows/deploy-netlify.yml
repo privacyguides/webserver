@@ -6,9 +6,6 @@ permissions:
 on:
   workflow_call:
     inputs:
-      netlify_site_id:
-        type: string
-        required: true
       environment:
         type: string
         required: true
@@ -41,7 +38,8 @@ jobs:
 
       - run: |
           for file in *.tar.gz; do tar -zxf "$file"; done
-          wget https://raw.githubusercontent.com/privacyguides/privacyguides.org/main/netlify.toml
+          wget https://raw.githubusercontent.com/privacyguides/webserver/main/netlify/netlify.toml
+          wget -P site https://raw.githubusercontent.com/privacyguides/webserver/main/netlify/_redirects
           ls -la site/
 
       - uses: actions/setup-node@v4

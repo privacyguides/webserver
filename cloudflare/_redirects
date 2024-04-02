@@ -1,0 +1,13 @@
+/  /en/       302
+
+/kb /en/basics/why-privacy-matters/
+/:lang/kb /:lang/basics/why-privacy-matters/
+
+/coc /en/CODE_OF_CONDUCT/
+/license https://github.com/privacyguides/privacyguides.org/tree/main/README.md#license
+/team /en/about/
+
+/providers/:slug /en/:slug/
+/software/:slug /en/:slug/
+/blog/* https://blog.privacyguides.org/:splat
+/assets/* /en/assets/:splat

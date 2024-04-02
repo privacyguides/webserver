@@ -1,0 +1,50 @@
+name: Deploy Website Build
+
+permissions:
+  contents: read
+  deployments: write
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      redirect_root:
+        type: string
+        default: "en"
+    secrets:
+      CF_API_TOKEN:
+        required: true
+      CF_ACCOUNT_ID:
+        required: true
+
+jobs:
+  cloudflare_pages:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ steps.publish.outputs.url }}
+
+    steps:
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: site-build-*
+          merge-multiple: true
+
+      - run: |
+          for file in *.tar.gz; do tar -zxf "$file"; done
+          wget -P site https://raw.githubusercontent.com/privacyguides/webserver/main/cloudflare/_redirects
+          ls -la site/
+
+      - id: publish
+        name: Publish to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          projectName: privacyguides
+          directory: site

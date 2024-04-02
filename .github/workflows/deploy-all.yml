@@ -4,6 +4,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  deployments: write
 
 on:
   workflow_call:
@@ -15,6 +16,9 @@ on:
         type: boolean
         default: true
       minio_production:
+        type: boolean
+        default: true
+      cloudfare_pages:
         type: boolean
         default: true
     outputs:
@@ -30,7 +34,6 @@ jobs:
     if: inputs.netlify_production
     uses: ./.github/workflows/deploy-netlify.yml
     with:
-      netlify_site_id: ${{ vars.PROD_NETLIFY_SITE }}
       environment: production
     secrets:
       NETLIFY_TOKEN: ${{ secrets.NETLIFY_TOKEN }}
@@ -49,3 +52,12 @@ jobs:
     uses: ./.github/workflows/deploy-pages.yml
     with:
       environment: github-pages
+
+  cloudflare:
+    if: inputs.cloudflare_pages
+    uses: ./.github/workflows/deploy-cloudflare.yml
+    with:
+      environment: cloudflare-pages
+    secrets:
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
