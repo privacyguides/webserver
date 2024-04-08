@@ -1,0 +1,83 @@
+name: Deploy to IPFS
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      default_path:
+        type: string
+        default: /en/index.html
+      cluster_host:
+        type: string
+        default: /dns/cluster.ipfs.jonaharagon.net/tcp/443/tls/sni/cluster.ipfs.jonaharagon.net
+      cloudflare_domain:
+        type: string
+        default: privacyguides.org
+      gateway_address:
+        type: string
+        default: https://cloudflare-ipfs.com
+    secrets:
+      CLUSTER_USERNAME:
+      CLUSTER_PASSWORD:
+      CLOUDFLARE_ZONE:
+      CLOUDFLARE_TOKEN:
+    outputs:
+      cid:
+        value: ${{ jobs.ipfs_cluster.outputs.cid }}
+
+jobs:
+  ipfs_cluster:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ inputs.gateway_address }}/ipfs/${{ steps.deploy.outputs.cid }}${{ inputs.default_path }}
+
+    outputs:
+      cid: ${{ steps.deploy.outputs.cid }}
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: site-offline-*
+          merge-multiple: true
+
+      - run: |
+          for file in *.tar.gz; do tar -zxf "$file"; done
+          ls -la site/
+
+      - run: |
+          wget https://dist.ipfs.tech/ipfs-cluster-ctl/v1.0.8/ipfs-cluster-ctl_v1.0.8_linux-amd64.tar.gz
+          tar xvf ipfs-cluster-ctl_v1.0.8_linux-amd64.tar.gz
+
+      - id: deploy
+        run: |
+          root_cid=$(./ipfs-cluster-ctl/ipfs-cluster-ctl \
+            --host '${{ inputs.cluster_host }}' \
+            --basic-auth ${{ secrets.CLUSTER_USERNAME }}:${{ secrets.CLUSTER_PASSWORD }} \
+            add \
+            --quieter \
+            --local \
+            --wait \
+            --cid-version 1 \
+            --name "https://github.com/$GITHUB_REPOSITORY/commits/$GITHUB_SHA" \
+            --expire-in 2190h \
+            --recursive site )
+          echo "cid=$root_cid" >> $GITHUB_OUTPUT
+
+      - uses: textileio/cloudflare-update-dnslink@30414a408191218c8259e932ebdf4cbb7c652fe8
+        with:
+          cid: ${{ steps.deploy.outputs.cid }}
+        env:
+          CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE }}
+          RECORD_DOMAIN: ${{ inputs.cloudflare_domain }}
+          RECORD_NAME: _dnslink.ipfs

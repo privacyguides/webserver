@@ -1,4 +1,4 @@
-name: Production Deploy
+name: Production Deployment
 
 permissions:
   contents: read
@@ -18,7 +18,10 @@ on:
       minio_production:
         type: boolean
         default: true
-      cloudfare_pages:
+      cloudflare_pages:
+        type: boolean
+        default: true
+      ipfs_production:
         type: boolean
         default: true
     outputs:
@@ -30,6 +33,10 @@ on:
       PROD_MINIO_SECRET_KEY:
       CF_API_TOKEN:
       CF_ACCOUNT_ID:
+      CLUSTER_USERNAME:
+      CLUSTER_PASSWORD:
+      CLOUDFLARE_ZONE:
+      CLOUDFLARE_TOKEN:
 
 jobs:
   netlify:
@@ -63,3 +70,14 @@ jobs:
     secrets:
       CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
       CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+  ipfs:
+    if: inputs.ipfs_production
+    uses: ./.github/workflows/deploy-ipfs.yml
+    with:
+      environment: dweb
+    secrets:
+      CLUSTER_USERNAME: ${{ secrets.CLUSTER_USERNAME }}
+      CLUSTER_PASSWORD: ${{ secrets.CLUSTER_PASSWORD }}
+      CLOUDFLARE_ZONE: ${{ secrets.CLOUDFLARE_ZONE }}
+      CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}

@@ -1,4 +1,4 @@
-name: Deploy Website Build
+name: Deploy to GitHub Pages
 
 permissions:
   contents: read
