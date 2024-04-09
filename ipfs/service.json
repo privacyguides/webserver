@@ -1,0 +1,188 @@
+{
+  "cluster": {
+    "secret": "9b973c86aa278c0d4707b5e5b066a9345fa40828f421aca96607684f3d809367",
+    "listen_multiaddress": [
+      "/ip4/0.0.0.0/tcp/19024",
+      "/ip6/::/tcp/19024"
+    ],
+    "connection_manager": {
+      "high_water": 400,
+      "low_water": 100,
+      "grace_period": "2m0s"
+    },
+    "state_sync_interval": "5m0s",
+    "replication_factor_min": -1,
+    "replication_factor_max": -1,
+    "monitor_ping_interval": "15s",
+    "peer_watch_interval": "5s",
+    "mdns_interval": "0",
+    "disable_repinning": true,
+    "follower_mode": true,
+    "peer_addresses": [
+      "/dns4/node-1.ipfs.jonaharagon.net/tcp/19024/p2p/12D3KooWLMFGoGbbpf3tUaPH9Kjmy54cNzNXrR19mgVXPnRJWLrG",
+      "/dns6/node-1.ipfs.jonaharagon.net/tcp/19024/p2p/12D3KooWLMFGoGbbpf3tUaPH9Kjmy54cNzNXrR19mgVXPnRJWLrG",
+      "/dns4/node-2.ipfs.jonaharagon.dev/tcp/19024/p2p/12D3KooWNUD6dsy8XgUfuX8VFBbt8B8CzPMeHgRpj57KyLkwHaaT",
+      "/dns6/node-2.ipfs.jonaharagon.dev/tcp/19024/p2p/12D3KooWNUD6dsy8XgUfuX8VFBbt8B8CzPMeHgRpj57KyLkwHaaT",
+      "/dns4/node-1.ipfs.jonaharagon.net/tcp/19024/p2p/12D3KooWLMFGoGbbpf3tUaPH9Kjmy54cNzNXrR19mgVXPnRJWLrG/p2p-circuit/p2p/12D3KooWNKFeSrBTcL7UtioXAYnutYTwdYyYdBnoMdFdNEQFcZLx",
+      "/dns6/node-2.ipfs.jonaharagon.dev/tcp/19024/p2p/12D3KooWNUD6dsy8XgUfuX8VFBbt8B8CzPMeHgRpj57KyLkwHaaT/p2p-circuit/p2p/12D3KooWNKFeSrBTcL7UtioXAYnutYTwdYyYdBnoMdFdNEQFcZLx"
+    ]
+  },
+  "consensus": {
+    "crdt": {
+      "cluster_name": "privacyguides_ipfs",
+      "trusted_peers": [
+        "12D3KooWMwqzuApCKxYfo66zq5BrTjCoz9naJ1rrMEBCnwuGGqWB",
+        "12D3KooWNUD6dsy8XgUfuX8VFBbt8B8CzPMeHgRpj57KyLkwHaaT",
+        "12D3KooWNKFeSrBTcL7UtioXAYnutYTwdYyYdBnoMdFdNEQFcZLx"
+      ],
+      "batching": {
+        "max_batch_size": 0,
+        "max_batch_age": "0s"
+      },
+      "repair_interval": "1h0m0s"
+    }
+  },
+  "api": {},
+  "ipfs_connector": {
+    "ipfshttp": {
+      "node_multiaddress": "/ip4/127.0.0.1/tcp/5001",
+      "connect_swarms_delay": "30s",
+      "ipfs_request_timeout": "5m0s",
+      "pin_timeout": "10m",
+      "unpin_timeout": "3h0m0s",
+      "unpin_disable": false
+    }
+  },
+  "pin_tracker": {
+    "stateless": {
+      "concurrent_pins": 10,
+      "priority_pin_max_age": "24h0m0s",
+      "priority_pin_max_retries": 5
+    }
+  },
+  "monitor": {
+    "pubsubmon": {
+      "check_interval": "15s"
+    }
+  },
+  "allocator": {
+    "balanced": {
+      "allocate_by": [
+        "tag:group",
+        "freespace"
+      ]
+    }
+  },
+  "informer": {
+    "disk": {
+      "metric_ttl": "30s",
+      "metric_type": "freespace"
+    },
+    "pinqueue": {
+      "metric_ttl": "30s",
+      "weight_bucket_size": 100000
+    },
+    "tags": {
+      "metric_ttl": "30s",
+      "tags": {
+        "group": "default"
+      }
+    }
+  },
+  "observations": {},
+  "datastore": {
+    "pebble": {
+      "pebble_options": {
+        "cache_size_bytes": 1073741824,
+        "bytes_per_sync": 1048576,
+        "disable_wal": false,
+        "flush_delay_delete_range": 0,
+        "flush_delay_range_key": 0,
+        "flush_split_bytes": 4194304,
+        "format_major_version": 16,
+        "l0_compaction_file_threshold": 750,
+        "l0_compaction_threshold": 4,
+        "l0_stop_writes_threshold": 12,
+        "l_base_max_bytes": 134217728,
+        "max_open_files": 1000,
+        "mem_table_size": 67108864,
+        "mem_table_stop_writes_threshold": 20,
+        "read_only": false,
+        "wal_bytes_per_sync": 0,
+        "levels": [
+          {
+            "block_restart_interval": 16,
+            "block_size": 4096,
+            "block_size_threshold": 90,
+            "compression": 2,
+            "filter_type": 0,
+            "filter_policy": 10,
+            "index_block_size": 4096,
+            "target_file_size": 4194304
+          },
+          {
+            "block_restart_interval": 16,
+            "block_size": 4096,
+            "block_size_threshold": 90,
+            "compression": 2,
+            "filter_type": 0,
+            "filter_policy": 10,
+            "index_block_size": 4096,
+            "target_file_size": 8388608
+          },
+          {
+            "block_restart_interval": 16,
+            "block_size": 4096,
+            "block_size_threshold": 90,
+            "compression": 2,
+            "filter_type": 0,
+            "filter_policy": 10,
+            "index_block_size": 4096,
+            "target_file_size": 16777216
+          },
+          {
+            "block_restart_interval": 16,
+            "block_size": 4096,
+            "block_size_threshold": 90,
+            "compression": 2,
+            "filter_type": 0,
+            "filter_policy": 10,
+            "index_block_size": 4096,
+            "target_file_size": 33554432
+          },
+          {
+            "block_restart_interval": 16,
+            "block_size": 4096,
+            "block_size_threshold": 90,
+            "compression": 2,
+            "filter_type": 0,
+            "filter_policy": 10,
+            "index_block_size": 4096,
+            "target_file_size": 67108864
+          },
+          {
+            "block_restart_interval": 16,
+            "block_size": 4096,
+            "block_size_threshold": 90,
+            "compression": 2,
+            "filter_type": 0,
+            "filter_policy": 10,
+            "index_block_size": 4096,
+            "target_file_size": 134217728
+          },
+          {
+            "block_restart_interval": 16,
+            "block_size": 4096,
+            "block_size_threshold": 90,
+            "compression": 2,
+            "filter_type": 0,
+            "filter_policy": 10,
+            "index_block_size": 4096,
+            "target_file_size": 268435456
+          }
+        ],
+        "max_concurrent_compactions": 5
+      }
+    }
+  }
+}
