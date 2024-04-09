@@ -1,0 +1,257 @@
+name: Deploy to Hyphanet
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      netpath:
+        required: true
+        type: string
+      public_key:
+        required: true
+        type: string
+      hyphanet_download:
+        type: string
+        default: "https://www.draketo.de/dateien/freenet/build01497/new_installer_offline_1497.jar"
+      jsite_download:
+        type: string
+        default: "https://github.com/Bombe/jSite/releases/download/0.14/jSite-0.14-jar-with-dependencies.jar"
+    secrets:
+      private_key:
+        required: true
+    outputs:
+      edition:
+        value: ${{ jobs.hyphanet.outputs.edition }}
+      netpath:
+        value: ${{ jobs.hyphanet.outputs.netpath }}
+      public_key:
+        value: ${{ jobs.hyphanet.outputs.public_key }}
+      url:
+        value: http://127.0.0.1:8888/USK@${{ jobs.hyphanet.outputs.public_key }}/${{ jobs.hyphanet.outputs.netpath }}/${{ jobs.hyphanet.outputs.edition }}/
+        description: "Final public Hyphanet URL"
+
+jobs:
+  hyphanet:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    permissions:
+      contents: read
+
+    outputs:
+      edition: ${{ steps.metadata.outputs.edition }}
+      netpath: ${{ steps.metadata.outputs.netpath }}
+      public_key: ${{ steps.metadata.outputs.public_key }}
+
+    environment:
+      name: ${{ inputs.environment }}
+      url: http://127.0.0.1:8888/USK@${{ steps.metadata.outputs.public_key }}/${{ steps.metadata.outputs.netpath }}/${{ steps.metadata.outputs.edition }}/
+
+    steps:
+      - name: Download Website
+        uses: actions/download-artifact@v4
+        with:
+          pattern: site-offline-*
+          merge-multiple: true
+
+      - name: Extract Website
+        run: |
+          for file in *.tar.gz; do tar -zxf "$file"; done
+          ls -la site/
+
+      - name: Install xmllint
+        run: |
+          sudo apt -y install libxml2-utils
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "oracle" # See 'Supported distributions' for available options
+          java-version: "17"
+
+      - name: Restore Hyphanet from Cache
+        id: restore-hyphanet
+        uses: actions/cache@v4
+        with:
+          path: hyphanet.jar
+          key: ${{ inputs.hyphanet_download }}
+
+      - name: Download Hyphanet
+        if: steps.restore-hyphanet.outputs.cache-hit != 'true'
+        run: |
+          wget ${{ inputs.hyphanet_download }} -O hyphanet.jar
+
+      - name: Cache Hyphanet
+        if: steps.restore-hyphanet.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: hyphanet.jar
+          key: ${{ inputs.hyphanet_download }}
+
+      - name: Install Hyphanet
+        run: |
+          mkdir -p hyphanet
+          mv hyphanet.jar hyphanet/
+          cd hyphanet
+          java -jar hyphanet.jar -console << DOC || true
+
+          1
+          DOC
+          cd ..
+          ./hyphanet/run.sh stop
+          sleep 10
+
+      - name: Configure Hyphanet
+        uses: 1arp/create-a-file-action@0.4.4
+        with:
+          path: ${{ github.workspace }}/hyphanet
+          file: freenet.ini
+          content: |
+            # This file is overwritten whenever Freenet shuts down, so only edit it when the node is not running.
+            security-levels.networkThreatLevel=LOW
+            security-levels.physicalThreatLevel=NORMAL
+            fproxy.allowedHosts=127.0.0.1,0:0:0:0:0:0:0:1
+            fproxy.publicGatewayMode=false
+            fproxy.port=8888
+            fproxy.enableCachingForChkAndSskKeys=true
+            fproxy.hasCompletedWizard=true
+            fproxy.ssl=false
+            fproxy.enabled=true
+            fproxy.bindTo=127.0.0.1,0:0:0:0:0:0:0:1
+            fproxy.allowedHostsFullAccess=127.0.0.1,0:0:0:0:0:0:0:1
+            logger.maxZippedLogsSize=10485760
+            logger.priority=WARNING
+            pluginmanager.loadplugin=Sharesite
+            pluginmanager.enabled=true
+            ssl.sslKeyStorePass=freenet
+            ssl.sslKeyPass=freenet
+            ssl.sslKeyStore=datastore/certs
+            ssl.sslEnable=false
+            node.masterKeyFile=master.keys
+            node.probeLinkLengths=true
+            node.slashdotCacheSize=104857600
+            node.minDiskFreeShortTerm=536870912
+            node.probeStoreSize=true
+            node.uploadAllowedDirs=all
+            node.outputBandwidthLimit=2097152
+            node.maxPacketSize=1280
+            node.connectionSpeedDetection=true
+            node.probeOverallBulkOutputCapacityUsage=true
+            node.minDiskFreeLongTerm=1073741824
+            node.storeSize=429496730
+            node.downloadAllowedDirs=all
+            node.storeType=salt-hash
+            node.assumeNATed=true
+            node.alwaysAllowLocalAddresses=false
+            node.clientCacheSize=209715200
+            node.bindTo=0.0.0.0
+            node.clientCacheType=salt-hash
+            node.inputBandwidthLimit=131072
+            node.listenPort=32323
+            node.storePreallocate=true
+            fcp.allowedHosts=127.0.0.1,0:0:0:0:0:0:0:1
+            fcp.port=9481
+            fcp.ssl=false
+            fcp.bindTo=127.0.0.1
+            fcp.allowedHostsFullAccess=127.0.0.1,0:0:0:0:0:0:0:1
+            node.opennet.assumeNATed=true
+            node.opennet.acceptSeedConnections=false
+            node.opennet.listenPort=61414
+            node.opennet.enabled=true
+            node.opennet.bindTo=0.0.0.0
+            End
+
+      - name: Start Hyphanet
+        run: |
+          ${{ github.workspace }}/hyphanet/run.sh start
+          sleep 60
+
+      - name: Debug
+        continue-on-error: true
+        run: |
+          curl http://127.0.0.1:8888/config/fcp
+
+      - name: Debug 2
+        continue-on-error: true
+        run: |
+          curl http://127.0.0.1:9481
+
+      - name: Restore jSite from Cache
+        id: restore-jsite
+        uses: actions/cache@v4
+        with:
+          path: jSite.jar
+          key: ${{ inputs.jsite_download }}
+
+      - name: Download jSite
+        if: steps.restore-jsite.outputs.cache-hit != 'true'
+        run: |
+          wget ${{ inputs.jsite_download }} -O jSite.jar
+
+      - name: Cache jSite
+        if: steps.restore-jsite.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: jSite.jar
+          key: ${{ inputs.jsite_download }}
+
+      - name: Setup jSite
+        uses: 1arp/create-a-file-action@0.4.4
+        with:
+          path: ${{ github.workspace }}
+          file: jSite.conf
+          content: |
+            <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+            <configuration>
+              <use-early-encode>false</use-early-encode>
+              <insert-priority>maximum</insert-priority>
+              <nodes>
+                <node>
+                  <name>Node</name>
+                  <hostname>127.0.0.1</hostname>
+                  <port>9481</port>
+                </node>
+              </nodes>
+              <selected-node>
+                <name>Node</name>
+                <hostname>127.0.0.1</hostname>
+                <port>9481</port>
+              </selected-node>
+              <project-list>
+                <project>
+                  <edition>-1</edition>
+                  <description/>
+                  <index-file/>
+                  <last-insertion-time>0</last-insertion-time>
+                  <local-path>${{ github.workspace }}/site</local-path>
+                  <name>GitHub Action Project</name>
+                  <path>${{ inputs.netpath }}</path>
+                  <insert-uri>${{ secrets.private_key }}</insert-uri>
+                  <request-uri>${{ inputs.public_key }}</request-uri>
+                  <ignore-hidden-files>false</ignore-hidden-files>
+                  <always-force-insert>false</always-force-insert>
+                  <last-insert-hashes/>
+                  <file-options/>
+                </project>
+              </project-list>
+            </configuration>
+
+      - name: Start jSite
+        run: |
+          java -cp jSite.jar de.todesbaum.jsite.main.CLI --project="GitHub Action Project"
+
+      - name: Get Metadata
+        id: metadata
+        run: |
+          echo edition=$(xmllint --xpath '//configuration//project-list/project/edition/text()' jSite.conf) >> $GITHUB_OUTPUT
+          echo netpath=$(xmllint --xpath '//configuration//project-list/project/path/text()' jSite.conf) >> $GITHUB_OUTPUT
+          echo public_key=$(xmllint --xpath '//configuration//project-list/project/request-uri/text()' jSite.conf) >> $GITHUB_OUTPUT
+
+      - name: Shutdown Hyphanet
+        run: |
+          ${{ github.workspace }}/hyphanet/run.sh stop

@@ -19,6 +19,7 @@ on:
 jobs:
   netlify_production:
     runs-on: ubuntu-latest
+    continue-on-error: true
 
     permissions:
       contents: read
