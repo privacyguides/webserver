@@ -20,7 +20,7 @@ on:
         default: privacyguides.org
       gateway_address:
         type: string
-        default: https://cloudflare-ipfs.com
+        default: https://ipfs.jonaharagon.net
     secrets:
       CLUSTER_USERNAME:
       CLUSTER_PASSWORD:
