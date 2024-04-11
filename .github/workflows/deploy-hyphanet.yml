@@ -241,7 +241,7 @@ jobs:
               </project-list>
             </configuration>
 
-      - name: Start jSite
+      - name: Upload Directory
         run: |
           java -cp jSite.jar de.todesbaum.jsite.main.CLI --project="GitHub Action Project"
 
@@ -254,4 +254,5 @@ jobs:
 
       - name: Shutdown Hyphanet
         run: |
+          sleep 120
           ${{ github.workspace }}/hyphanet/run.sh stop

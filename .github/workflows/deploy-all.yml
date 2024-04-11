@@ -24,6 +24,9 @@ on:
       ipfs_production:
         type: boolean
         default: true
+      hyphanet_production:
+        type: boolean
+        default: true
     outputs:
       netlify_preview_address:
         value: ${{ jobs.netlify.outputs.address }}
@@ -81,3 +84,13 @@ jobs:
       CLUSTER_PASSWORD: ${{ secrets.CLUSTER_PASSWORD }}
       CLOUDFLARE_ZONE: ${{ secrets.CLOUDFLARE_ZONE }}
       CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+
+  hyphanet:
+    if: inputs.hyphanet_production
+    uses: ./.github/workflows/deploy-hyphanet.yml
+    with:
+      environment: dweb
+      netpath: privacyguides
+      public_key: ${{ vars.HYPHANET_PUBLIC_KEY }}
+    secrets:
+      private_key: ${{ secrets.HYPHA_PRIVATE_KEY }}

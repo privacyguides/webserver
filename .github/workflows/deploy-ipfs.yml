@@ -21,6 +21,9 @@ on:
       gateway_address:
         type: string
         default: https://ipfs.jonaharagon.net
+      redirect_root:
+        type: string
+        default: en/
     secrets:
       CLUSTER_USERNAME:
       CLUSTER_PASSWORD:
@@ -47,12 +50,32 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: site-offline-*
+          pattern: site-build-*
           merge-multiple: true
 
       - run: |
           for file in *.tar.gz; do tar -zxf "$file"; done
           ls -la site/
+
+      - if: inputs.redirect_root != ''
+        uses: 1arp/create-a-file-action@0.4.4
+        with:
+          path: site
+          file: index.html
+          content: |
+            <html lang="en">
+              <head>
+                <title>Redirecting...</title>
+                <meta
+                  http-equiv="refresh"
+                  content="0; URL=./${{ inputs.redirect_root }}"
+                />
+              </head>
+              <body>
+                <p>Redirecting you to the <a href="./en/index.html">
+                  English</a> copy...</p>
+              </body>
+            </html>
 
       - run: |
           wget https://dist.ipfs.tech/ipfs-cluster-ctl/v1.0.8/ipfs-cluster-ctl_v1.0.8_linux-amd64.tar.gz

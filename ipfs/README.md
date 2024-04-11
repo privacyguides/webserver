@@ -2,9 +2,9 @@
 
 IPFS is a decentralized, peer-to-peer network for storing and sharing data. We store [privacyguides.org](https://www.privacyguides.org) on the network, to make the website as accessible as possible regardless of internet or DNS censorship.
 
-If you want to contribute to mirroring a copy of the website, you can join our IPFS Cluster. Doing so will automatically "pin" every release of our website to your IPFS client for 90 days, meaning other people will be able to grab a copy of the website from you in case they aren't able to from anywhere else.
-
 ## Joining the cluster
+
+If you want to contribute to mirroring a copy of the website, you can join our IPFS Cluster. Doing so will automatically "pin" every release of our website to your IPFS client for 90 days, meaning other people will be able to grab a copy of the website from you in case they aren't able to from anywhere else.
 
 1. [Install IPFS](https://docs.ipfs.tech/install/ipfs-desktop/)
 2. [Install `ipfs-cluster-follow`](https://dist.ipfs.tech/#ipfs-cluster-follow)
@@ -27,3 +27,7 @@ If you want to contribute to mirroring a copy of the website, you can join our I
     [Install]
     WantedBy=multi-user.target
     ```
+
+## Update Script
+
+The [update-pin.sh](./update-pin.sh) script is another convenient way to download the latest copy of the site and save it to your [MFS](https://docs.ipfs.tech/concepts/file-systems/). You could consider running it in a cron job for example.
