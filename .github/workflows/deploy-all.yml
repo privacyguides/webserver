@@ -26,7 +26,7 @@ on:
         default: true
       hyphanet_production:
         type: boolean
-        default: true
+        default: false
     outputs:
       netlify_preview_address:
         value: ${{ jobs.netlify.outputs.address }}
