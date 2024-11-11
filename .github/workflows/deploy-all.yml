@@ -17,13 +17,16 @@ on:
         default: true
       minio_production:
         type: boolean
+        default: false
+      garage_production:
+        type: boolean
         default: true
       cloudflare_pages:
         type: boolean
         default: true
       ipfs_production:
         type: boolean
-        default: true
+        default: false
       hyphanet_production:
         type: boolean
         default: false
@@ -34,6 +37,8 @@ on:
       NETLIFY_TOKEN:
       PROD_MINIO_KEY_ID:
       PROD_MINIO_SECRET_KEY:
+      PROD_GARAGE_KEY_ID:
+      PROD_GARAGE_SECRET_KEY:
       CF_API_TOKEN:
       CF_ACCOUNT_ID:
       CLUSTER_USERNAME:
@@ -58,6 +63,15 @@ jobs:
     secrets:
       PROD_MINIO_KEY_ID: ${{ secrets.PROD_MINIO_KEY_ID }}
       PROD_MINIO_SECRET_KEY: ${{ secrets.PROD_MINIO_SECRET_KEY }}
+
+  garage:
+    if: inputs.garage_production
+    uses: ./.github/workflows/deploy-garage.yml
+    with:
+      environment: production
+    secrets:
+      PROD_GARAGE_KEY_ID: ${{ secrets.PROD_GARAGE_KEY_ID }}
+      PROD_GARAGE_SECRET_KEY: ${{ secrets.PROD_GARAGE_SECRET_KEY }}
 
   pages:
     if: inputs.github_pages
