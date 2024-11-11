@@ -37,12 +37,11 @@ jobs:
           for file in *.tar.gz; do tar -zxf "$file"; done
           ls -la site/
 
-      - uses: jakejarvis/s3-sync-action@master
+      - uses: hkdobrev/minio-deploy-action@v1
         with:
-          args: --acl public-read --follow-symlinks --delete
-        env:
-          SOURCE_DIR: "site/"
-          AWS_S3_BUCKET: ${{ vars.PROD_GARAGE_BUCKET }}
-          AWS_S3_ENDPOINT: https://${{ vars.PROD_GARAGE_HOSTNAME }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.PROD_GARAGE_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_GARAGE_SECRET_KEY }}
+          endpoint: https://${{ vars.PROD_GARAGE_HOSTNAME }}
+          bucket: ${{ vars.PROD_GARAGE_BUCKET }}
+          access_key: ${{ secrets.PROD_GARAGE_KEY_ID }}
+          secret_key: ${{ secrets.PROD_GARAGE_SECRET_KEY }}
+          source_dir: "site/"
+          target_dir: "/"
