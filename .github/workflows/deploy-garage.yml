@@ -43,6 +43,6 @@ jobs:
         env:
           SOURCE_DIR: "site/"
           AWS_S3_BUCKET: ${{ vars.PROD_GARAGE_BUCKET }}
-          AWS_S3_ENDPOINT: https://s3.${{ vars.PROD_GARAGE_HOSTNAME }}
+          AWS_S3_ENDPOINT: https://${{ vars.PROD_GARAGE_HOSTNAME }}
           AWS_ACCESS_KEY_ID: ${{ secrets.PROD_GARAGE_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_GARAGE_SECRET_KEY }}

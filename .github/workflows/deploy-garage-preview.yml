@@ -1,0 +1,63 @@
+name: Deploy Preview to Garage
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      alias:
+        type: string
+        required: true
+      bucket:
+        type: string
+        required: true
+      hostname:
+        type: string
+        required: true
+    outputs:
+      address:
+        value: ${{ jobs.garage_preview.outputs.address }}
+    secrets:
+      PREVIEW_GARAGE_KEY_ID:
+        required: true
+      PREVIEW_GARAGE_SECRET_KEY:
+        required: true
+
+jobs:
+  garage_preview:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    outputs:
+      address: ${{ steps.deployment.outputs.address }}
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: site-build-*
+          merge-multiple: true
+
+      - run: |
+          for file in *.tar.gz; do tar -zxf "$file"; done
+          ls -la site/
+
+      - name: Limit length of site alias to 12
+        run: echo "SHORT_ALIAS=$(echo "${{ inputs.alias }}" | cut -c1-12)" >> "$GITHUB_ENV"
+
+      - uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --acl public-read --follow-symlinks --delete
+        env:
+          SOURCE_DIR: "site/"
+          DEST_DIR: "${{ env.SHORT_ALIAS }}/"
+          AWS_S3_BUCKET: ${{ inputs.bucket }}
+          AWS_S3_ENDPOINT: https://${{ inputs.hostname }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.PREVIEW_GARAGE_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PREVIEW_GARAGE_SECRET_KEY }}
+
+      - id: deployment
+        run: |
+          echo "address=https://${{ inputs.bucket }}.web.${{ inputs.hostname }}/${{ env.SHORT_ALIAS }}/en/index.html" >> "$GITHUB_OUTPUT"
