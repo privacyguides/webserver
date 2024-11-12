@@ -58,4 +58,4 @@ jobs:
 
       - id: deployment
         run: |
-          echo "address=https://${{ inputs.bucket }}.web.${{ inputs.hostname }}/${{ env.SHORT_ALIAS }}/en/index.html" >> "$GITHUB_OUTPUT"
+          echo "address=https://pr${{ env.SHORT_ALIAS }}.unreviewed.privacyguides.dev/en/" >> "$GITHUB_OUTPUT"
