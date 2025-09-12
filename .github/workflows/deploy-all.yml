@@ -11,7 +11,7 @@ on:
     inputs:
       netlify_production:
         type: boolean
-        default: true
+        default: false
       github_pages:
         type: boolean
         default: true
