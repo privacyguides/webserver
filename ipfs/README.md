@@ -8,7 +8,7 @@ If you want to contribute to mirroring a copy of the website, you can join our I
 
 1. [Install IPFS](https://docs.ipfs.tech/install/ipfs-desktop/)
 2. [Install `ipfs-cluster-follow`](https://dist.ipfs.tech/#ipfs-cluster-follow)
-    - On Linux, you could download the binary from this page and move it to `/usr/bin/local`, for example
+    - On Linux, you could download the binary from this page and move it to `/usr/local/bin`, for example
 3. Run `ipfs-cluster-follow privacyguides_ipfs run --init https://raw.githubusercontent.com/privacyguides/webserver/main/ipfs/service.json`
 4. After running the init command for the first time, you may want to set up a systemd service to run the cluster in the background, this might be a good starting point:
 
