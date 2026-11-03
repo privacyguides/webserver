@@ -37,7 +37,7 @@ jobs:
           for file in *.tar.gz; do tar -zxf "$file"; done
           ls -la site/
 
-      - uses: hkdobrev/minio-deploy-action@v1
+      - uses: hkdobrev/minio-deploy-action@c758675f5667336646cbaddbf07ea5edfc7b4854
         with:
           endpoint: https://${{ vars.PROD_GARAGE_HOSTNAME }}
           bucket: ${{ vars.PROD_GARAGE_BUCKET }}

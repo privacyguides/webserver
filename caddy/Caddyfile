@@ -1,3 +1,52 @@
+{
+	on_demand_tls {
+		ask http://172.16.30.5:3903/check
+		interval 2m
+		burst 5
+	}
+}
+
+(garage-s3) {
+	reverse_proxy 172.16.30.5:3900 172.16.30.6:3900 172.16.30.7:3900 172.16.30.8:3900 172.16.30.9:3900 {
+		fail_duration 30s
+		unhealthy_latency 10s
+	}
+}
+
+(garage-web) {
+	reverse_proxy 172.16.30.5:3902 172.16.30.6:3902 172.16.30.7:3902 172.16.30.8:3902 172.16.30.9:3902 {
+		fail_duration 30s
+		unhealthy_latency 10s
+	}
+}
+
+(hsts) {
+	header ?Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+	header +Content-Security-Policy upgrade-insecure-requests;
+}
+
+garage.jonaharagon.net, s3.garage.jonaharagon.net {
+	import garage-s3
+}
+
+*.s3.garage.jonaharagon.net {
+	tls {
+		on_demand
+	}
+	import garage-s3
+}
+
+web.garage.jonaharagon.net {
+	import garage-web
+}
+
+https:// {
+	tls {
+		on_demand
+	}
+	import garage-web
+}
+
 (pg-umami-config) {
 	umami {
 		event_endpoint https://stats.jonaharagon.net/api/send
@@ -10,41 +59,226 @@
 	}
 }
 
-direct.privacyguides.org {
-	import vars
-	import common/*.caddy
-	import production/*.caddy
-	#	log
+(pg-matchers) {
+	@static {
+		path *.ico *.css *.js *.gif *.webp *.avif *.jpg *.jpeg *.png *.svg *.woff *.woff2
+	}
+
+	@en path /en/*
+	@es path /es/*
+	@fr path /fr/*
+	@he path /he/*
+	@it path /it/*
+	@nl path /nl/*
+	@ru path /ru/*
+	@zh-Hant path /zh-Hant/*
+
+	@es-header {
+		header Accept-Language es*
+	}
+	@fr-header {
+		header Accept-Language fr*
+	}
+	@he-header {
+		header Accept-Language he*
+	}
+	@it-header {
+		header Accept-Language it*
+	}
+	@nl-header {
+		header Accept-Language nl*
+	}
+	@ru-header {
+		header Accept-Language ru*
+	}
+	@zh-Hant-header {
+		header Accept-Language zh-Hant*
+	}
 }
 
-http://www.xoe4vn5uwdztif6goazfbmogh6wh5jc4up35bqdflu6bkdc5cas5vjqd.onion {
-	import vars
-	import common/*.caddy
-	import production/minio.caddy
+(pg-headers) {
+	header X-Frame-Options SAMEORIGIN
+	header X-Content-Type-Options nosniff
+	header X-XSS-Protection 0
+
+	vars pg_csp_self "https://www.privacyguides.org https://cdn.privacyguides.org 'self'"
+	# You can check whether a CSP directive will fall back to default-src on MDN.
+	# Add CSP directives WITH a default-src fallback here:
+	header +Content-Security-Policy "default-src 'none'; script-src {vars.pg_csp_self} 'unsafe-inline'; style-src {vars.pg_csp_self} 'unsafe-inline'; font-src {vars.pg_csp_self} data:; img-src data: https://*.privacyguides.net {vars.pg_csp_self}; connect-src https://api.github.com https://*.privacyguides.net {vars.pg_csp_self}; frame-src https://*.privacyguides.net https://snowflake.torproject.org {vars.pg_csp_self}"
+	# Add CSP directives WITHOUT a default-src fallback here:
+	header +Content-Security-Policy "form-action 'self'; frame-ancestors 'none'; base-uri 'none'; sandbox allow-scripts allow-popups allow-same-origin;"
+
+	header Permissions-Policy "browsing-topics=(), conversion-measurement=(), interest-cohort=(), accelerometer=(), ambient-light-sensor=(), battery=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), usb=()"
+
+	header Access-Control-Allow-Origin "*"
+
+	header @static Cache-Control max-age=2592000
 }
 
-http://*.xoe4vn5uwdztif6goazfbmogh6wh5jc4up35bqdflu6bkdc5cas5vjqd.onion {
-	@hostnames header_regexp hostname Host (\S+)\.xoe4vn5uwdztif6goazfbmogh6wh5jc4up35bqdflu6bkdc5cas5vjqd\.onion
-	handle @hostnames {
-		reverse_proxy {re.hostname.1}.privacyguides.org:443 {
-			header_up Host {re.hostname.1}.privacyguides.org
-			transport http {
-				tls
-			}
+(pg-redirects) {
+	redir /kb* /en/basics/why-privacy-matters/
+	redir /license* https://github.com/privacyguides/privacyguides.org/tree/main/README.md#license
+	redir /coc* /en/CODE_OF_CONDUCT/
+	redir /team* /en/about/
+}
+
+(pg-redirects-lang) {
+	route / {
+		header Cache-Control no-store
+
+		redir @es-header /es
+		redir @fr-header /fr
+		redir @he-header /he
+		redir @it-header /it
+		redir @nl-header /nl
+		redir @ru-header /ru
+		redir @zh-Hant-header /zh-Hant
+
+		# default case
+		handle {
+			redir * /en/
 		}
 	}
-}
 
-privacyguides.org {
-	import vars
-	import production/matrix.caddy
-
-	handle {
-		import production/https.caddy
-		redir https://www.privacyguides.org{uri}
+	@kb {
+		path */kb */kb/*
+	}
+	route @kb {
+		redir @es /es/basics/why-privacy-matters/
+		redir @fr /fr/basics/why-privacy-matters/
+		redir @he /he/basics/why-privacy-matters/
+		redir @it /it/basics/why-privacy-matters/
+		redir @nl /nl/basics/why-privacy-matters/
+		redir @ru /ru/basics/why-privacy-matters/
+		redir @zh-Hant /zh-Hant/basics/why-privacy-matters/
+		redir * /en/basics/why-privacy-matters/
 	}
 }
 
-http://xoe4vn5uwdztif6goazfbmogh6wh5jc4up35bqdflu6bkdc5cas5vjqd.onion {
-	redir http://www.xoe4vn5uwdztif6goazfbmogh6wh5jc4up35bqdflu6bkdc5cas5vjqd.onion{uri}
+(pg-redirects-outdated) {
+	redir /browsers /en/desktop-browsers/
+	redir /blog https://blog.privacyguides.org
+	redir /basics/dns-overview /en/advanced/dns-overview/
+	redir /basics/tor-overview /en/advanced/tor-overview/
+	redir /real-time-communication/communication-network-types /en/advanced/communication-network-types
+	redir /advanced/real-time-communication /en/advanced/communication-network-types
+	redir /android/overview /en/os/android-overview/
+	redir /linux-desktop/overview /en/os/linux-overview/
+	redir /android/grapheneos-vs-calyxos https://blog.privacyguides.org/2022/04/21/grapheneos-or-calyxos/
+	redir /ios/configuration https://blog.privacyguides.org/2022/10/22/ios-configuration-guide/
+	redir /linux-desktop/hardening https://blog.privacyguides.org/2022/04/22/linux-system-hardening/
+	redir /linux-desktop/sandboxing https://blog.privacyguides.org/2022/04/22/linux-application-sandboxing/
+	redir /advanced/signal-configuration-hardening https://blog.privacyguides.org/2022/07/07/signal-configuration-and-hardening/
+	redir /real-time-communication/signal-configuration-hardening https://blog.privacyguides.org/2022/07/07/signal-configuration-and-hardening/
+	redir /advanced/integrating-metadata-removal https://blog.privacyguides.org/2022/04/09/integrating-metadata-removal/
+	redir /advanced/erasing-data https://blog.privacyguides.org/2022/05/25/secure-data-erasure/
+	redir /operating-systems /en/desktop/
+	redir /threat-modeling /en/basics/threat-modeling/
+	redir /self-contained-networks /en/tor/
+	redir /privacy-policy /en/about/privacy-policy/
+	redir /metadata-removal-tools /en/data-redaction/
+	redir /basics /en/kb
+	redir /software/file-encryption /en/encryption/
+	redir /providers /en/tools/#service-providers
+	redir /software/calendar-contacts /en/calendar/
+	redir /calendar-contacts /en/calendar/
+	redir /software/metadata-removal-tools /en/data-redaction/
+	redir /contact /en/about/
+	redir /welcome-to-privacy-guides https://blog.privacyguides.org/2021/09/14/welcome-to-privacy-guides/
+	redir /software/email /en/email-clients/
+	redir /providers/paste /en/tools/
+	redir /blog/2019/10/05/understanding-vpns https://www.jonaharagon.com/posts/understanding-vpns/
+	redir /terms-and-notices /en/about/notices/
+	redir /software/networks /en/tor/
+	redir /social-news-aggregator /en/news-aggregators/
+	redir /basics/erasing-data https://blog.privacyguides.org/2022/05/25/secure-data-erasure/
+	redir /linux-desktop /en/desktop/
+
+	handle_path /providers/* {
+		redir * /en/{uri}
+	}
+	handle_path /software/* {
+		redir * /en/{uri}
+	}
+	handle_path /blog/* {
+		redir * https://blog.privacyguides.org/{uri}
+	}
+	handle_path /assets/* {
+		redir * /en/assets/{uri}
+	}
+}
+
+(pg-canonical) {
+	@canonicalPath {
+		path */
+	}
+	route @canonicalPath {
+		rewrite @canonicalPath {http.request.orig_uri.path}index.html
+	}
+}
+
+direct-garage.privacyguides.org, www.privacyguides.org {
+	@matrix path /.well-known/matrix/*
+	handle @matrix {
+		reverse_proxy https://matrix.privacyguides.org {
+			header_up Host matrix.privacyguides.org
+			header_up X-Forwarded-Port {http.request.port}
+			header_up X-Forwarded-TlsProto {tls_protocol}
+			header_up X-Forwarded-TlsCipher {tls_cipher}
+			header_up X-Forwarded-HttpsProto {proto}
+		}
+	}
+
+	@assets path_regexp assets /([a-zA-Z0-9]*)/assets/(.*)$
+	handle @assets {
+		redir https://bunnycdn.privacyguides.org/{re.assets.1}/assets/{re.assets.2} permanent
+	}
+
+	handle / {
+		import pg-matchers
+		import pg-redirects-lang
+	}
+
+	handle {
+		import garage-web
+		import hsts
+		# import pg-umami-config
+		import pg-matchers
+		import pg-headers
+		import pg-redirects
+		import pg-redirects-lang
+		import pg-redirects-outdated
+		import pg-canonical
+
+		encode zstd gzip
+
+		header +Link "<https://bunnycdn.privacyguides.org/>; rel=preconnect"
+		header +Link "<https://api.github.com/>; rel=dns-prefetch"
+		header /en/ +Link "<https://discuss.privacyguides.net/>; rel=preconnect"
+		header /en/ +Link "<https://forum-cdn.privacyguides.net/>; rel=preconnect"
+	}
+}
+
+pr2806.unreviewed.privacyguides.dev {
+	@hostnames header_regexp hostname Host pr(\d+)\.unreviewed\.privacyguides\.dev
+
+	handle @hostnames {
+		rewrite * /{re.hostname.1}{uri}
+
+		reverse_proxy 172.16.30.5:3902 172.16.30.6:3902 172.16.30.7:3902 172.16.30.8:3902 172.16.30.9:3902 {
+			header_up Host privacyguides-preview.web.garage.jonaharagon.net
+		}
+	}
+
+	import hsts
+	import pg-matchers
+	import pg-headers
+	import pg-redirects
+	import pg-redirects-lang
+	import pg-redirects-outdated
+	import pg-canonical
+
+	encode zstd gzip
+
+	header X-Robots-Tag "noindex, nofollow"
 }

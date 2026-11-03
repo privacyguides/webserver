@@ -47,7 +47,7 @@ jobs:
       - name: Limit length of site alias to 12
         run: echo "SHORT_ALIAS=$(echo "${{ inputs.alias }}" | cut -c1-12)" >> "$GITHUB_ENV"
 
-      - uses: hkdobrev/minio-deploy-action@v1
+      - uses: hkdobrev/minio-deploy-action@c758675f5667336646cbaddbf07ea5edfc7b4854
         with:
           endpoint: https://${{ inputs.hostname }}
           bucket: ${{ inputs.bucket }}
