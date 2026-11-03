@@ -23,7 +23,7 @@ on:
         default: true
       cloudflare_pages:
         type: boolean
-        default: true
+        default: false
       ipfs_production:
         type: boolean
         default: false
